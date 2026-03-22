@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: payout-service
+
+server:
+  port: 8082
+
+logging:
+  level:
+    com.remit.mellonsecure: DEBUG
