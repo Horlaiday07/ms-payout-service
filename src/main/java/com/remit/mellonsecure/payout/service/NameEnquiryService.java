@@ -1,12 +1,12 @@
 package com.remit.mellonsecure.payout.service;
 
-import com.remit.mellonsecure.payout.domain.enums.MerchantStatus;
-import com.remit.mellonsecure.payout.domain.exception.MerchantInactiveException;
-import com.remit.mellonsecure.payout.domain.exception.MerchantNotFoundException;
-import com.remit.mellonsecure.payout.domain.model.Merchant;
-import com.remit.mellonsecure.payout.domain.model.NameEnquiryResult;
-import com.remit.mellonsecure.payout.domain.port.MerchantRepository;
-import com.remit.mellonsecure.payout.domain.port.ProcessorAdapter;
+import com.remit.mellonsecure.payout.entity.MerchantStatus;
+import com.remit.mellonsecure.payout.exception.MerchantInactiveException;
+import com.remit.mellonsecure.payout.exception.MerchantNotFoundException;
+import com.remit.mellonsecure.payout.entity.Merchant;
+import com.remit.mellonsecure.payout.entity.NameEnquiryResult;
+import com.remit.mellonsecure.payout.repository.MerchantRepository;
+import com.remit.mellonsecure.payout.processor.ProcessorAdapter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -1,10 +1,10 @@
 package com.remit.mellonsecure.payout.service;
 
-import com.remit.mellonsecure.payout.domain.exception.MerchantNotFoundException;
-import com.remit.mellonsecure.payout.domain.exception.TransactionNotFoundException;
-import com.remit.mellonsecure.payout.domain.model.PayoutTransaction;
-import com.remit.mellonsecure.payout.domain.port.MerchantRepository;
-import com.remit.mellonsecure.payout.domain.port.TransactionRepository;
+import com.remit.mellonsecure.payout.exception.MerchantNotFoundException;
+import com.remit.mellonsecure.payout.exception.TransactionNotFoundException;
+import com.remit.mellonsecure.payout.entity.PayoutTransaction;
+import com.remit.mellonsecure.payout.repository.MerchantRepository;
+import com.remit.mellonsecure.payout.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
