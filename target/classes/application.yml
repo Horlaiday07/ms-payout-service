@@ -83,7 +83,7 @@ payout:
 
   idempotency:
     ttl-hours: 24
-    key-prefix: idempotency:
+    key-prefix: "idempotency:"
 
   webhook:
     signature-header: X-Webhook-Signature
