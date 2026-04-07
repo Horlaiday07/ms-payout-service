@@ -75,37 +75,42 @@ public class MerchantLookupService {
             }
         }
 
-        if (StringUtils.hasText(paymentDashboardBaseUrl) && StringUtils.hasText(syncApiKey)) {
-            try {
-                String body = webClientBuilder
-                        .baseUrl(trimTrailingSlash(paymentDashboardBaseUrl))
-                        .build()
-                        .get()
-                        .uri("/api/internal/payout-merchants/by-code/{code}", id)
-                        .header(SYNC_HEADER, syncApiKey)
-                        .retrieve()
-                        .bodyToMono(String.class)
-                        .block(HTTP_TIMEOUT);
-                if (StringUtils.hasText(body)) {
-                    try {
-                        stringRedisTemplate.opsForValue().set(keyPrefix + id, body);
-                    } catch (Exception e) {
-                        log.debug("Could not mirror merchant snapshot to Redis for {}: {}", id, e.getMessage());
-                    }
-                    PayoutMerchantCachePayload payload = objectMapper.readValue(body, PayoutMerchantCachePayload.class);
-                    return Optional.of(toDomain(payload));
-                }
-            } catch (WebClientResponseException e) {
-                if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                    log.debug("Payment dashboard: merchant not found: {}", id);
-                } else {
-                    log.warn("Payment dashboard merchant lookup failed for {}: {} {}", id, e.getStatusCode(), e.getMessage());
-                }
-            } catch (Exception e) {
-                log.warn("Payment dashboard merchant lookup failed for {}: {}", id, e.getMessage());
-            }
+        if (!StringUtils.hasText(paymentDashboardBaseUrl) || !StringUtils.hasText(syncApiKey)) {
+            log.warn("Merchant {} not resolved: no Redis key {}{}; configure payout.payment-dashboard.base-url and sync-api-key (same as app.payout.merchant-sync-api-key on payment app)",
+                    id, keyPrefix, id);
+            return Optional.empty();
         }
 
+        try {
+            String body = webClientBuilder
+                    .baseUrl(trimTrailingSlash(paymentDashboardBaseUrl))
+                    .build()
+                    .get()
+                    .uri("/api/internal/payout-merchants/by-code/{code}", id)
+                    .header(SYNC_HEADER, syncApiKey)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .block(HTTP_TIMEOUT);
+            if (StringUtils.hasText(body)) {
+                try {
+                    stringRedisTemplate.opsForValue().set(keyPrefix + id, body);
+                } catch (Exception e) {
+                    log.debug("Could not mirror merchant snapshot to Redis for {}: {}", id, e.getMessage());
+                }
+                PayoutMerchantCachePayload payload = objectMapper.readValue(body, PayoutMerchantCachePayload.class);
+                return Optional.of(toDomain(payload));
+            }
+        } catch (WebClientResponseException e) {
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                log.warn("Merchant {} not resolved: payment dashboard has no merchant (404 on sync)", id);
+            } else {
+                log.warn("Payment dashboard merchant lookup failed for {}: {} {}", id, e.getStatusCode(), e.getMessage());
+            }
+        } catch (Exception e) {
+            log.warn("Payment dashboard merchant lookup failed for {}: {}", id, e.getMessage());
+        }
+
+        log.warn("Merchant {} not resolved after Redis miss and sync attempt", id);
         return Optional.empty();
     }
 

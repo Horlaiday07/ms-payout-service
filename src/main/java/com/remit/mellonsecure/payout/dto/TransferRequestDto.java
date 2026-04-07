@@ -19,5 +19,8 @@ public record TransferRequestDto(
         @NotNull(message = "Amount is required")
         @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
         BigDecimal amount,
-        String narration
+        String narration,
+        /** When both account name and ref are set (e.g. from prior name enquiry), transfer skips a duplicate name enquiry. */
+        String accountName,
+        String nameEnquiryRef
 ) {}

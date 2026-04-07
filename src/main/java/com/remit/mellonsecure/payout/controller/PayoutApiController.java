@@ -96,7 +96,9 @@ public class PayoutApiController {
                 request.accountNumber(),
                 request.bankCode(),
                 request.amount(),
-                request.narration()
+                request.narration(),
+                request.accountName(),
+                request.nameEnquiryRef()
         );
         try {
             PayoutTransaction tx = transferService.execute(command);

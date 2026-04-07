@@ -60,7 +60,7 @@ public class TransferService {
             throw new InsufficientBalanceException(command.merchantId(), command.amount());
         }
 
-        NameEnquiryResult nameEnquiry = processorAdapter.performNameEnquiry(command.accountNumber(), command.bankCode());
+        NameEnquiryResult nameEnquiry = resolveNameEnquiry(command);
         if (!nameEnquiry.isSuccess()) {
             throw new PayoutDomainException("NAME_ENQUIRY_FAILED", nameEnquiry.getResponseMessage());
         }
@@ -108,6 +108,23 @@ public class TransferService {
         }
 
         return transaction;
+    }
+
+    private NameEnquiryResult resolveNameEnquiry(TransferCommand command) {
+        String preName = command.accountName();
+        String preRef = command.nameEnquiryRef();
+        if (preName != null && !preName.isBlank() && preRef != null && !preRef.isBlank()) {
+            return NameEnquiryResult.builder()
+                    .accountNumber(command.accountNumber())
+                    .bankCode(command.bankCode())
+                    .accountName(preName.trim())
+                    .sessionId(preRef.trim())
+                    .success(true)
+                    .responseCode("00")
+                    .responseMessage("PRE_VERIFIED")
+                    .build();
+        }
+        return processorAdapter.performNameEnquiry(command.accountNumber(), command.bankCode());
     }
 
     private Merchant validateMerchant(String merchantId) {
@@ -160,7 +177,9 @@ public class TransferService {
             String accountNumber,
             String bankCode,
             BigDecimal amount,
-            String narration
+            String narration,
+            String accountName,
+            String nameEnquiryRef
     ) {}
 
     public record StandardResponse(

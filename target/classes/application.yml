@@ -69,7 +69,7 @@ spring.rabbitmq:
 # ============ NIBSS/Processor ============
 payout:
   nibss:
-    base-url: ${NIBSS_BASE_URL:https://nibss.example.com}
+    base-url: ${NIBSS_BASE_URL:https://naming-enquiry.free.beeceptor.com}
     timeout: 30000
     name-enquiry-path: /api/nip/nameEnquiry
     transfer-path: /api/nip/transfer

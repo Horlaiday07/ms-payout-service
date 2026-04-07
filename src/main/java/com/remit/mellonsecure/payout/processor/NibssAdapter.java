@@ -14,6 +14,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Component
@@ -41,24 +42,26 @@ public class NibssAdapter implements ProcessorAdapter {
 
     @Override
     public NameEnquiryResult performNameEnquiry(String accountNumber, String bankCode) {
-        log.info("NIBSS Name Enquiry: accountNumber={}, bankCode={}", mask(accountNumber), bankCode);
+        String endpoint = baseUrl + nameEnquiryPath;
         try {
             Map<String, Object> request = Map.of(
                     "accountNumber", accountNumber,
                     "bankCode", bankCode
             );
+            log.info("NIBSS POST {} request={}", endpoint, requestBodyForLog(request));
             String response = getWebClient()
                     .post()
-                    .uri(baseUrl + nameEnquiryPath)
+                    .uri(endpoint)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(request)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block(Duration.ofMillis(timeout));
 
+            log.info("NIBSS POST {} response={}", endpoint, response);
             return parseNameEnquiryResponse(response, accountNumber, bankCode);
         } catch (Exception e) {
-            log.error("Name enquiry failed: {}", e.getMessage());
+            log.error("Name enquiry failed: endpoint={} {}", endpoint, e.getMessage());
             return NameEnquiryResult.builder()
                     .accountNumber(accountNumber)
                     .bankCode(bankCode)
@@ -71,7 +74,7 @@ public class NibssAdapter implements ProcessorAdapter {
 
     @Override
     public TransferResult performTransfer(TransferRequest request) {
-        log.info("NIBSS Transfer: paymentReference={}", request.getPaymentReference());
+        String endpoint = baseUrl + transferPath;
         try {
             Map<String, Object> nibssRequest = Map.of(
                     "paymentReference", request.getPaymentReference(),
@@ -84,18 +87,20 @@ public class NibssAdapter implements ProcessorAdapter {
                     "sourceAccount", request.getSourceAccount()
             );
 
+            log.info("NIBSS POST {} request={}", endpoint, requestBodyForLog(nibssRequest));
             String response = getWebClient()
                     .post()
-                    .uri(baseUrl + transferPath)
+                    .uri(endpoint)
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(nibssRequest)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block(Duration.ofMillis(timeout));
 
+            log.info("NIBSS POST {} response={}", endpoint, response);
             return parseTransferResponse(response, request.getPaymentReference(), request.getAmount());
         } catch (Exception e) {
-            log.error("Transfer failed: paymentReference={}", request.getPaymentReference(), e);
+            log.error("Transfer failed: endpoint={} paymentReference={}", endpoint, request.getPaymentReference(), e);
             return TransferResult.builder()
                     .paymentReference(request.getPaymentReference())
                     .success(false)
@@ -108,18 +113,20 @@ public class NibssAdapter implements ProcessorAdapter {
 
     @Override
     public TransactionQueryResult queryTransaction(String processorReference) {
-        log.info("NIBSS Query: processorReference={}", processorReference);
+        String endpoint = baseUrl + queryPath + "/" + processorReference;
         try {
+            log.info("NIBSS GET {} request=(none)", endpoint);
             String response = getWebClient()
                     .get()
-                    .uri(baseUrl + queryPath + "/" + processorReference)
+                    .uri(endpoint)
                     .retrieve()
                     .bodyToMono(String.class)
                     .block(Duration.ofMillis(timeout));
 
+            log.info("NIBSS GET {} response={}", endpoint, response);
             return parseQueryResponse(response, processorReference);
         } catch (Exception e) {
-            log.error("Query failed: processorReference={}", processorReference, e);
+            log.error("Query failed: endpoint={} processorReference={}", endpoint, processorReference, e);
             return TransactionQueryResult.builder()
                     .processorReference(processorReference)
                     .success(false)
@@ -235,5 +242,20 @@ public class NibssAdapter implements ProcessorAdapter {
     private String mask(String value) {
         if (value == null || value.length() < 4) return "****";
         return value.substring(0, 2) + "***" + value.substring(value.length() - 2);
+    }
+
+    /** JSON for logs; masks accountNumber, sessionId, paymentReference, accountName, sourceAccount. */
+    private String requestBodyForLog(Map<String, Object> body) {
+        try {
+            Map<String, Object> copy = new LinkedHashMap<>(body);
+            // copy.computeIfPresent("accountNumber", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("sessionId", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("paymentReference", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("accountName", (k, v) -> mask(String.valueOf(v)));
+            copy.computeIfPresent("sourceAccount", (k, v) -> mask(String.valueOf(v)));
+            return objectMapper.writeValueAsString(copy);
+        } catch (Exception e) {
+            return String.valueOf(body);
+        }
     }
 }
