@@ -9,6 +9,7 @@ com/remit/mellonsecure/payout/entity/PayoutTransaction.class
 com/remit/mellonsecure/payout/entity/BatchStatus.class
 com/remit/mellonsecure/payout/publisher/WebhookPublisher.class
 com/remit/mellonsecure/payout/repository/IdempotencyStore.class
+com/remit/mellonsecure/payout/dto/cache/PayoutMerchantCachePayload$PayoutMerchantCachePayloadBuilder.class
 com/remit/mellonsecure/payout/config/OpenApiConfig.class
 com/remit/mellonsecure/payout/service/BatchTransferService.class
 com/remit/mellonsecure/payout/repository/PayoutBatchJpaRepository.class
@@ -18,9 +19,9 @@ com/remit/mellonsecure/payout/publisher/WebhookPublisherAdapter.class
 com/remit/mellonsecure/payout/consumer/QueryConsumer.class
 com/remit/mellonsecure/payout/exception/MerchantNotFoundException.class
 com/remit/mellonsecure/payout/service/WebhookDeliveryService.class
-com/remit/mellonsecure/payout/repository/MerchantJpaRepository.class
 com/remit/mellonsecure/payout/service/TransferService$StandardResponse.class
 com/remit/mellonsecure/payout/repository/PayoutTransactionJpaRepository.class
+com/remit/mellonsecure/payout/cache/PayoutMerchantCacheReader.class
 com/remit/mellonsecure/payout/dto/BatchTransferRequestDto.class
 com/remit/mellonsecure/payout/publisher/TransferPublisher.class
 com/remit/mellonsecure/payout/dto/PayoutMerchantDashboardDto$RecentPayoutTransactionDto.class
@@ -32,7 +33,6 @@ com/remit/mellonsecure/payout/exception/InsufficientBalanceException.class
 com/remit/mellonsecure/payout/exception/MerchantInactiveException.class
 com/remit/mellonsecure/payout/dto/PayoutMerchantDashboardDto$PayoutMerchantDashboardDtoBuilder.class
 com/remit/mellonsecure/payout/entity/NameEnquiryResult.class
-com/remit/mellonsecure/payout/entity/MerchantEntity$MerchantEntityBuilder.class
 com/remit/mellonsecure/payout/entity/Merchant.class
 com/remit/mellonsecure/payout/controller/PayoutApiController.class
 com/remit/mellonsecure/payout/service/NameEnquiryService.class
@@ -44,10 +44,9 @@ com/remit/mellonsecure/payout/entity/TransferResult.class
 com/remit/mellonsecure/payout/consumer/ResponseHandler.class
 com/remit/mellonsecure/payout/config/RequestLoggingFilter.class
 com/remit/mellonsecure/payout/dto/WebhookPayloadDto$WebhookPayloadDtoBuilder.class
-com/remit/mellonsecure/payout/entity/MerchantEntity.class
+com/remit/mellonsecure/payout/service/MerchantLookupService.class
 com/remit/mellonsecure/payout/entity/WebhookEventEntity$WebhookEventEntityBuilder.class
 com/remit/mellonsecure/payout/service/TransactionQueryService.class
-com/remit/mellonsecure/payout/repository/MerchantRepository.class
 com/remit/mellonsecure/payout/controller/AdminController.class
 com/remit/mellonsecure/payout/consumer/TransferConsumer$ResponseMessage.class
 com/remit/mellonsecure/payout/dto/ErrorResponse.class
@@ -76,6 +75,7 @@ com/remit/mellonsecure/payout/entity/PayoutTransaction$PayoutTransactionBuilder.
 com/remit/mellonsecure/payout/config/GlobalExceptionHandler.class
 com/remit/mellonsecure/payout/entity/MerchantStatus.class
 com/remit/mellonsecure/payout/consumer/TransferConsumer.class
+com/remit/mellonsecure/payout/dto/cache/PayoutMerchantCachePayload.class
 com/remit/mellonsecure/payout/controller/IpnController.class
 com/remit/mellonsecure/payout/repository/BatchRepository.class
 com/remit/mellonsecure/payout/dto/PayoutResponse.class
@@ -85,7 +85,6 @@ com/remit/mellonsecure/payout/exception/IdempotencyConflictException.class
 com/remit/mellonsecure/payout/security/PayoutSecurityFilter.class
 com/remit/mellonsecure/payout/processor/ProcessorAdapter.class
 com/remit/mellonsecure/payout/entity/PayoutBatch.class
-com/remit/mellonsecure/payout/repository/MerchantRepositoryAdapter.class
 com/remit/mellonsecure/payout/entity/NameEnquiryResult$NameEnquiryResultBuilder.class
 com/remit/mellonsecure/payout/service/MerchantDashboardQueryService.class
 com/remit/mellonsecure/PayoutServiceApplication.class

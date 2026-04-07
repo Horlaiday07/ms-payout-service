@@ -3,7 +3,6 @@ package com.remit.mellonsecure.payout.service;
 import com.remit.mellonsecure.payout.exception.MerchantNotFoundException;
 import com.remit.mellonsecure.payout.exception.TransactionNotFoundException;
 import com.remit.mellonsecure.payout.entity.PayoutTransaction;
-import com.remit.mellonsecure.payout.repository.MerchantRepository;
 import com.remit.mellonsecure.payout.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +14,10 @@ import org.springframework.stereotype.Service;
 public class TransactionQueryService {
 
     private final TransactionRepository transactionRepository;
-    private final MerchantRepository merchantRepository;
+    private final MerchantLookupService merchantLookupService;
 
     public PayoutTransaction execute(String merchantId, String transactionId) {
-        merchantRepository.findById(merchantId)
+        merchantLookupService.findByMerchantIdFromCacheOrSync(merchantId)
                 .orElseThrow(() -> new MerchantNotFoundException(merchantId));
 
         return transactionRepository.findByTransactionId(transactionId)

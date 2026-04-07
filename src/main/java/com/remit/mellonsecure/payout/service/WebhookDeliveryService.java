@@ -1,6 +1,5 @@
 package com.remit.mellonsecure.payout.service;
 
-import com.remit.mellonsecure.payout.repository.MerchantRepository;
 import com.remit.mellonsecure.payout.publisher.WebhookPublisherAdapter.WebhookMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +18,7 @@ import java.util.Base64;
 @Slf4j
 public class WebhookDeliveryService {
 
-    private final MerchantRepository merchantRepository;
+    private final MerchantLookupService merchantLookupService;
     private final WebClient.Builder webClientBuilder;
 
     @Value("${payout.webhook.signature-header:X-Webhook-Signature}")
@@ -29,7 +28,7 @@ public class WebhookDeliveryService {
     private int timeoutMs;
 
     public void deliver(WebhookMessage message) {
-        merchantRepository.findById(message.merchantId())
+        merchantLookupService.findByMerchantIdFromCacheOrSync(message.merchantId())
                 .ifPresent(merchant -> {
                     String signature = computeHmacSha256(merchant.getSecretKey(), message.payload());
                     deliverToUrl(message.webhookUrl(), message.payload(), signature);

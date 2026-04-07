@@ -2,7 +2,7 @@ package com.remit.mellonsecure.payout.consumer;
 
 import com.remit.mellonsecure.payout.config.RabbitMQConfig;
 import com.remit.mellonsecure.payout.entity.WebhookPayload;
-import com.remit.mellonsecure.payout.repository.MerchantRepository;
+import com.remit.mellonsecure.payout.service.MerchantLookupService;
 import com.remit.mellonsecure.payout.repository.TransactionRepository;
 import com.remit.mellonsecure.payout.publisher.WebhookPublisher;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +12,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -20,7 +19,7 @@ import java.util.Optional;
 public class ResponseHandler {
 
     private final TransactionRepository transactionRepository;
-    private final MerchantRepository merchantRepository;
+    private final MerchantLookupService merchantLookupService;
     private final WebhookPublisher webhookPublisher;
     private final RabbitTemplate rabbitTemplate;
 
@@ -39,7 +38,7 @@ public class ResponseHandler {
                 response.processorReference()
         );
 
-        merchantRepository.findById(response.merchantId()).ifPresent(merchant -> {
+        merchantLookupService.findByMerchantIdFromCacheOrSync(response.merchantId()).ifPresent(merchant -> {
             if (merchant.getWebhookUrl() != null && !merchant.getWebhookUrl().isBlank()) {
                 WebhookPayload payload = WebhookPayload.builder()
                         .merchantId(response.merchantId())

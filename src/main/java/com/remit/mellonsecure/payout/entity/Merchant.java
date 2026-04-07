@@ -10,6 +10,8 @@ import java.util.List;
 @Builder
 public class Merchant {
     String id;
+    /** Business code (e.g. MERCH001); same as {@link #id} when resolved from cache. */
+    String merchantCode;
     String name;
     String apiKey;
     String secretKey;

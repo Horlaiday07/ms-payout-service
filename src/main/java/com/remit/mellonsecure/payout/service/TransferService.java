@@ -22,7 +22,8 @@ import java.time.Instant;
 @Slf4j
 public class TransferService {
 
-    private final MerchantRepository merchantRepository;
+    private final MerchantLookupService merchantLookupService;
+    private final PayoutTransactionJpaRepository payoutTransactionJpaRepository;
     private final TransactionRepository transactionRepository;
     private final LedgerClient ledgerClient;
     private final ProcessorAdapter processorAdapter;
@@ -40,7 +41,7 @@ public class TransferService {
                 ? command.merchantReference()
                 : idGenerator.generatePaymentReference();
 
-        if (merchantRepository.existsByMerchantReference(command.merchantId(), merchantRef)) {
+        if (payoutTransactionJpaRepository.existsByMerchantIdAndMerchantReference(command.merchantId(), merchantRef)) {
             return transactionRepository.findByMerchantIdAndMerchantReference(command.merchantId(), merchantRef)
                     .orElseThrow(() -> new IdempotencyConflictException(merchantRef));
         }
@@ -110,7 +111,7 @@ public class TransferService {
     }
 
     private Merchant validateMerchant(String merchantId) {
-        Merchant merchant = merchantRepository.findById(merchantId)
+        Merchant merchant = merchantLookupService.findByMerchantIdFromCacheOrSync(merchantId)
                 .orElseThrow(() -> new MerchantNotFoundException(merchantId));
         if (merchant.getStatus() != MerchantStatus.ACTIVE) {
             throw new MerchantInactiveException(merchantId);

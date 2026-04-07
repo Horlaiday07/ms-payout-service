@@ -7,9 +7,9 @@ server:
 
 # ============ DATASOURCE ============
 spring.datasource:
-  url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5432}/${POSTGRES_DB:payout_db}
-  username: ${POSTGRES_USER:payout_user}
-  password: ${POSTGRES_PASSWORD:changeme}
+  url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:payout_db}
+  username: ${POSTGRES_USER:postgres}
+  password: ${POSTGRES_PASSWORD:root}
   driver-class-name: org.postgresql.Driver
   hikari:
     maximum-pool-size: 50
@@ -93,6 +93,19 @@ payout:
 
   signature:
     timestamp-tolerance-seconds: 300
+
+  # Payment dashboard (source of truth for merchants); internal sync uses X-Payout-Sync-Key only (no JWT).
+  payment-dashboard:
+    base-url: ${PAYMENT_DASHBOARD_BASE_URL:http://localhost:8080}
+    sync-api-key: ${PAYOUT_MERCHANT_SYNC_API_KEY:dev-payout-merchant-sync-change-in-prod}
+
+  merchant-cache:
+    reader-enabled: ${PAYOUT_MERCHANT_CACHE_READER_ENABLED:true}
+    key-prefix: ${PAYOUT_MERCHANT_CACHE_KEY_PREFIX:payout:merchant:}
+
+  security:
+    # Base64-encoded 32-byte AES key, or any string (SHA-256 used as key material)
+    secret-encryption-key: ${PAYOUT_SECRET_ENCRYPTION_KEY:}
 
   messaging:
     transfer-ttl: 60000

@@ -1,10 +1,9 @@
 package com.remit.mellonsecure.payout.security;
 
 import com.remit.mellonsecure.payout.entity.MerchantStatus;
-import com.remit.mellonsecure.payout.exception.MerchantNotFoundException;
 import com.remit.mellonsecure.payout.exception.SignatureValidationException;
 import com.remit.mellonsecure.payout.entity.Merchant;
-import com.remit.mellonsecure.payout.repository.MerchantRepository;
+import com.remit.mellonsecure.payout.service.MerchantLookupService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,7 +31,7 @@ import java.util.Base64;
 @Slf4j
 public class PayoutSecurityFilter extends OncePerRequestFilter {
 
-    private final MerchantRepository merchantRepository;
+    private final MerchantLookupService merchantLookupService;
 
     @Value("${payout.signature.timestamp-tolerance-seconds:300}")
     private int timestampToleranceSeconds;
@@ -48,8 +47,8 @@ public class PayoutSecurityFilter extends OncePerRequestFilter {
         ContentCachingRequestWrapper wrappedRequest = (ContentCachingRequestWrapper) request;
 
         try {
-            String merchantId = wrappedRequest.getHeader("X-Merchant-Id");
-            String apiKey = request.getHeader("X-API-KEY");
+            String merchantId = trimHeader(wrappedRequest.getHeader("X-Merchant-Id"));
+            String apiKey = trimHeader(request.getHeader("X-API-KEY"));
             String signature = request.getHeader("X-SIGNATURE");
             String timestamp = request.getHeader("X-TIMESTAMP");
 
@@ -58,10 +57,21 @@ public class PayoutSecurityFilter extends OncePerRequestFilter {
                 return;
             }
 
-            Merchant merchant = merchantRepository.findById(merchantId)
-                    .filter(m -> m.getApiKey().equals(apiKey))
-                    .or(() -> merchantRepository.findByApiKey(apiKey).filter(m -> m.getId().equals(merchantId)))
-                    .orElseThrow(() -> new MerchantNotFoundException(merchantId));
+            var merchantOpt = merchantLookupService.findByMerchantIdFromCacheOrSync(merchantId);
+            if (merchantOpt.isEmpty()) {
+                sendUnauthorized(response, "Unknown merchant: no record for X-Merchant-Id");
+                return;
+            }
+            Merchant merchant = merchantOpt.get();
+            String expectedKey = merchant.getApiKey();
+            if (expectedKey == null || expectedKey.isBlank()) {
+                sendUnauthorized(response, "Merchant has no API key configured");
+                return;
+            }
+            if (!expectedKey.equals(apiKey)) {
+                sendUnauthorized(response, "X-API-KEY does not match this merchant");
+                return;
+            }
 
             if (merchant.getStatus() != MerchantStatus.ACTIVE) {
                 sendUnauthorized(response, "Merchant is not active");
@@ -69,7 +79,9 @@ public class PayoutSecurityFilter extends OncePerRequestFilter {
             }
 
             String clientIp = extractClientIp(wrappedRequest);
-            if (!merchant.getWhitelistedIps().isEmpty() && !merchant.getWhitelistedIps().contains(clientIp)) {
+            if (!merchant.getWhitelistedIps().isEmpty()
+                    && !merchant.getWhitelistedIps().contains(clientIp)
+                    && !isLoopback(clientIp)) {
                 log.warn("IP not whitelisted: ip={}, merchantId={}", clientIp, merchantId);
                 sendUnauthorized(response, "IP not whitelisted");
                 return;
@@ -82,7 +94,7 @@ public class PayoutSecurityFilter extends OncePerRequestFilter {
 
             MerchantContext.set(merchant);
             filterChain.doFilter(wrappedRequest, response);
-        } catch (MerchantNotFoundException | SignatureValidationException e) {
+        } catch (SignatureValidationException e) {
             log.warn("Security validation failed: {}", e.getMessage());
             sendUnauthorized(response, e.getMessage());
         } finally {
@@ -134,6 +146,21 @@ public class PayoutSecurityFilter extends OncePerRequestFilter {
         }
     }
 
+    private static String trimHeader(String value) {
+        if (value == null) {
+            return null;
+        }
+        String t = value.trim();
+        return t.isEmpty() ? null : t;
+    }
+
+    private static boolean isLoopback(String ip) {
+        if (ip == null || ip.isBlank()) {
+            return false;
+        }
+        return "127.0.0.1".equals(ip) || "::1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip);
+    }
+
     private String extractClientIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
         if (xForwardedFor != null && !xForwardedFor.isEmpty()) {
@@ -144,7 +171,15 @@ public class PayoutSecurityFilter extends OncePerRequestFilter {
 
     private void sendUnauthorized(HttpServletResponse response, String message) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.setContentType("application/json");
-        response.getWriter().write("{\"responseCode\":\"401\",\"responseDescription\":\"" + message + "\"}");
+        response.setContentType("application/json; charset=UTF-8");
+        String safe = jsonEscape(message);
+        response.getWriter().write("{\"responseCode\":\"401\",\"responseDescription\":\"" + safe + "\"}");
+    }
+
+    private static String jsonEscape(String message) {
+        if (message == null) {
+            return "";
+        }
+        return message.replace("\\", "\\\\").replace("\"", "\\\"");
     }
 }

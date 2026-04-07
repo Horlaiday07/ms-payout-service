@@ -4,7 +4,6 @@ import com.remit.mellonsecure.payout.dto.PayoutMerchantDashboardDto;
 import com.remit.mellonsecure.payout.exception.MerchantNotFoundException;
 import com.remit.mellonsecure.payout.entity.Merchant;
 import com.remit.mellonsecure.payout.client.LedgerClient;
-import com.remit.mellonsecure.payout.repository.MerchantRepository;
 import com.remit.mellonsecure.payout.entity.PayoutTransactionEntity;
 import com.remit.mellonsecure.payout.repository.PayoutTransactionJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +20,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MerchantDashboardQueryService {
 
-    private final MerchantRepository merchantRepository;
+    private final MerchantLookupService merchantLookupService;
     private final LedgerClient ledgerClient;
     private final PayoutTransactionJpaRepository transactionJpaRepository;
 
     public PayoutMerchantDashboardDto get(String merchantId) {
-        Merchant merchant = merchantRepository.findById(merchantId)
+        Merchant merchant = merchantLookupService.findByMerchantIdFromCacheOrSync(merchantId)
                 .orElseThrow(() -> new MerchantNotFoundException(merchantId));
 
         BigDecimal balance = BigDecimal.ZERO;

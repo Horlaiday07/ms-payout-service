@@ -23,7 +23,8 @@ import java.util.List;
 @Slf4j
 public class BatchTransferService {
 
-    private final MerchantRepository merchantRepository;
+    private final MerchantLookupService merchantLookupService;
+    private final PayoutTransactionJpaRepository payoutTransactionJpaRepository;
     private final TransactionRepository transactionRepository;
     private final BatchRepository batchRepository;
     private final LedgerClient ledgerClient;
@@ -32,7 +33,7 @@ public class BatchTransferService {
     private final IdGenerator idGenerator;
 
     public BatchTransferResult execute(String merchantId, List<TransferCommand> transfers) {
-        var merchant = merchantRepository.findById(merchantId)
+        var merchant = merchantLookupService.findByMerchantIdFromCacheOrSync(merchantId)
                 .orElseThrow(() -> new MerchantNotFoundException(merchantId));
         if (merchant.getStatus() != MerchantStatus.ACTIVE) {
             throw new MerchantInactiveException(merchantId);
@@ -57,7 +58,7 @@ public class BatchTransferService {
         List<PayoutTransaction> created = new ArrayList<>();
         for (TransferCommand cmd : transfers) {
             try {
-                if (merchantRepository.existsByMerchantReference(merchantId, cmd.merchantReference())) {
+                if (payoutTransactionJpaRepository.existsByMerchantIdAndMerchantReference(merchantId, cmd.merchantReference())) {
                     continue;
                 }
                 if (!ledgerClient.hasSufficientBalance(merchant.getSourceAccountNumber(), cmd.amount())) {
