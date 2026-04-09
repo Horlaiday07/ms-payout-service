@@ -361,14 +361,14 @@ public class NibssAdapter implements ProcessorAdapter {
     private String requestBodyForLog(Map<String, Object> body) {
         try {
             Map<String, Object> copy = new LinkedHashMap<>(body);
-            copy.computeIfPresent("accountNumber", (k, v) -> mask(String.valueOf(v)));
-            copy.computeIfPresent("beneficiaryAccountNumber", (k, v) -> mask(String.valueOf(v)));
-            copy.computeIfPresent("originatorAccountNumber", (k, v) -> mask(String.valueOf(v)));
-            copy.computeIfPresent("nameEnquiryRef", (k, v) -> mask(String.valueOf(v)));
-            copy.computeIfPresent("paymentReference", (k, v) -> mask(String.valueOf(v)));
-            copy.computeIfPresent("transactionId", (k, v) -> mask(String.valueOf(v)));
-            copy.computeIfPresent("beneficiaryAccountName", (k, v) -> mask(String.valueOf(v)));
-            copy.computeIfPresent("originatorBankVerificationNumber", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("accountNumber", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("beneficiaryAccountNumber", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("originatorAccountNumber", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("nameEnquiryRef", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("paymentReference", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("transactionId", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("beneficiaryAccountName", (k, v) -> mask(String.valueOf(v)));
+            // copy.computeIfPresent("originatorBankVerificationNumber", (k, v) -> mask(String.valueOf(v)));
             return objectMapper.writeValueAsString(copy);
         } catch (Exception e) {
             return String.valueOf(body);

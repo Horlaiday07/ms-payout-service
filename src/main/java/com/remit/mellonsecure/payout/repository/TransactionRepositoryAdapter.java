@@ -7,6 +7,7 @@ import com.remit.mellonsecure.payout.entity.PayoutTransactionEntity;
 import com.remit.mellonsecure.payout.repository.PayoutTransactionJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -39,11 +40,13 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
     }
 
     @Override
+    @Transactional
     public void updateStatus(String transactionId, String status, String processorResponse) {
         jpaRepository.updateStatus(transactionId, status, processorResponse);
     }
 
     @Override
+    @Transactional
     public void updateStatus(String transactionId, String status, String processorResponse, String processorReference) {
         jpaRepository.updateStatusWithProcessorRef(transactionId, status, processorResponse, processorReference);
     }

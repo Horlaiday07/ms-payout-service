@@ -19,6 +19,7 @@ com/remit/mellonsecure/payout/publisher/WebhookPublisherAdapter.class
 com/remit/mellonsecure/payout/consumer/QueryConsumer.class
 com/remit/mellonsecure/payout/exception/MerchantNotFoundException.class
 com/remit/mellonsecure/payout/service/WebhookDeliveryService.class
+com/remit/mellonsecure/payout/repository/MerchantJpaRepository.class
 com/remit/mellonsecure/payout/service/TransferService$StandardResponse.class
 com/remit/mellonsecure/payout/repository/PayoutTransactionJpaRepository.class
 com/remit/mellonsecure/payout/cache/PayoutMerchantCacheReader.class
@@ -45,6 +46,7 @@ com/remit/mellonsecure/payout/consumer/ResponseHandler.class
 com/remit/mellonsecure/payout/config/RequestLoggingFilter.class
 com/remit/mellonsecure/payout/dto/WebhookPayloadDto$WebhookPayloadDtoBuilder.class
 com/remit/mellonsecure/payout/service/MerchantLookupService.class
+com/remit/mellonsecure/payout/entity/MerchantEntity.class
 com/remit/mellonsecure/payout/entity/WebhookEventEntity$WebhookEventEntityBuilder.class
 com/remit/mellonsecure/payout/service/TransactionQueryService.class
 com/remit/mellonsecure/payout/controller/AdminController.class
@@ -93,6 +95,7 @@ com/remit/mellonsecure/payout/entity/PayoutBatchEntity$PayoutBatchEntityBuilder.
 com/remit/mellonsecure/payout/service/TransferService.class
 com/remit/mellonsecure/payout/repository/RedisIdempotencyStore.class
 com/remit/mellonsecure/payout/publisher/WebhookPublisherAdapter$WebhookMessage.class
+com/remit/mellonsecure/payout/service/MerchantEntitySyncService.class
 com/remit/mellonsecure/payout/controller/PayoutApiController$BatchTransferResponse.class
 com/remit/mellonsecure/payout/entity/TransferMessage$TransferMessageBuilder.class
 com/remit/mellonsecure/payout/config/WebClientConfig.class

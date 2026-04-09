@@ -28,6 +28,7 @@
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/entity/PayoutTransactionEntity.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/config/RequestLoggingFilter.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/service/MerchantLookupService.java
+/Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/entity/MerchantEntity.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/dto/StandardPayoutResponse.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/repository/PayoutTransactionJpaRepository.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/service/MerchantDashboardQueryService.java
@@ -40,6 +41,7 @@
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/exception/IdempotencyConflictException.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/entity/MerchantStatus.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/exception/InsufficientBalanceException.java
+/Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/repository/MerchantJpaRepository.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/dto/ErrorResponse.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/dto/PayoutResponse.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/entity/WebhookPayload.java
@@ -54,6 +56,7 @@
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/entity/NameEnquiryResult.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/config/GlobalExceptionHandler.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/controller/PayoutApiController.java
+/Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/service/MerchantEntitySyncService.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/service/WebhookDeliveryService.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/repository/WebhookEventJpaRepository.java
 /Users/macbook/melonsecureremit/ms-micro-services/ms-payout-service/src/main/java/com/remit/mellonsecure/payout/config/RabbitMQConfig.java

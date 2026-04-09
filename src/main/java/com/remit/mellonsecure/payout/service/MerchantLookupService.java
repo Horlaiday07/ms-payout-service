@@ -37,6 +37,7 @@ public class MerchantLookupService {
     private final WebClient.Builder webClientBuilder;
     private final ObjectMapper objectMapper;
     private final StringRedisTemplate stringRedisTemplate;
+    private final MerchantEntitySyncService merchantEntitySyncService;
     private final String paymentDashboardBaseUrl;
     private final String syncApiKey;
     private final String keyPrefix;
@@ -46,6 +47,7 @@ public class MerchantLookupService {
             WebClient.Builder webClientBuilder,
             ObjectMapper objectMapper,
             StringRedisTemplate stringRedisTemplate,
+            MerchantEntitySyncService merchantEntitySyncService,
             @Value("${payout.payment-dashboard.base-url:}") String paymentDashboardBaseUrl,
             @Value("${payout.payment-dashboard.sync-api-key:}") String syncApiKey,
             @Value("${payout.merchant-cache.key-prefix:payout:merchant:}") String keyPrefixRaw) {
@@ -53,6 +55,7 @@ public class MerchantLookupService {
         this.webClientBuilder = webClientBuilder;
         this.objectMapper = objectMapper;
         this.stringRedisTemplate = stringRedisTemplate;
+        this.merchantEntitySyncService = merchantEntitySyncService;
         this.paymentDashboardBaseUrl = paymentDashboardBaseUrl != null ? paymentDashboardBaseUrl.trim() : "";
         this.syncApiKey = syncApiKey != null ? syncApiKey.trim() : "";
         this.keyPrefix = keyPrefixRaw.endsWith(":") ? keyPrefixRaw : keyPrefixRaw + ":";
@@ -71,6 +74,7 @@ public class MerchantLookupService {
         if (reader != null) {
             Optional<Merchant> fromRedis = reader.findByMerchantCode(id).map(this::toDomain);
             if (fromRedis.isPresent()) {
+                merchantEntitySyncService.ensureRow(fromRedis.get());
                 return fromRedis;
             }
         }
@@ -98,7 +102,9 @@ public class MerchantLookupService {
                     log.debug("Could not mirror merchant snapshot to Redis for {}: {}", id, e.getMessage());
                 }
                 PayoutMerchantCachePayload payload = objectMapper.readValue(body, PayoutMerchantCachePayload.class);
-                return Optional.of(toDomain(payload));
+                Merchant merchant = toDomain(payload);
+                merchantEntitySyncService.ensureRow(merchant);
+                return Optional.of(merchant);
             }
         } catch (WebClientResponseException e) {
             if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
