@@ -31,6 +31,13 @@ public class RedisIdGenerator implements IdGenerator {
     }
 
     @Override
+    public String generateNipTransactionId() {
+        long seq = nextSequence();
+        long t = Instant.now().toEpochMilli();
+        return String.format("100005%012d%012d", t % 1_000_000_000_000L, seq % 1_000_000_000_000L);
+    }
+
+    @Override
     public long nextId() {
         Long increment = redisTemplate.opsForValue().increment(ID_COUNTER_KEY);
         return increment != null ? increment : System.currentTimeMillis();

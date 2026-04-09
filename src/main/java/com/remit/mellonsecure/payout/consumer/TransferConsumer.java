@@ -28,6 +28,7 @@ public class TransferConsumer {
         log.info("Processing transfer: paymentReference={}", message.getPaymentReference());
         try {
             TransferRequest request = TransferRequest.builder()
+                    .transactionId(message.getTransactionId())
                     .paymentReference(message.getPaymentReference())
                     .nameEnquiryRef(message.getNameEnquiryRef())
                     .accountNumber(message.getAccountNumber())

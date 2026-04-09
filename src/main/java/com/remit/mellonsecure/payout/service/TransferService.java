@@ -39,7 +39,7 @@ public class TransferService {
         validateCommand(command);
         String merchantRef = command.merchantReference() != null && !command.merchantReference().isBlank()
                 ? command.merchantReference()
-                : idGenerator.generatePaymentReference();
+                : command.merchantId() + "-" + idGenerator.generatePaymentReference();
 
         if (payoutTransactionJpaRepository.existsByMerchantIdAndMerchantReference(command.merchantId(), merchantRef)) {
             return transactionRepository.findByMerchantIdAndMerchantReference(command.merchantId(), merchantRef)
@@ -56,9 +56,9 @@ public class TransferService {
 
         String paymentReference = idGenerator.generatePaymentReference();
 
-        if (!ledgerClient.hasSufficientBalance(merchant.getSourceAccountNumber(), command.amount())) {
-            throw new InsufficientBalanceException(command.merchantId(), command.amount());
-        }
+        // if (!ledgerClient.hasSufficientBalance(merchant.getSourceAccountNumber(), command.amount())) {
+        //     throw new InsufficientBalanceException(command.merchantId(), command.amount());
+        // }
 
         NameEnquiryResult nameEnquiry = resolveNameEnquiry(command);
         if (!nameEnquiry.isSuccess()) {

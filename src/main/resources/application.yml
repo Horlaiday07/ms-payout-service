@@ -74,6 +74,16 @@ payout:
     name-enquiry-path: /api/nip/nameEnquiry
     transfer-path: /api/nip/transfer
     query-path: /api/nip/transaction/query
+    # Fund transfer / name enquiry (NIP-style JSON)
+    channel-code: ${NIBSS_CHANNEL_CODE:1}
+    source-institution-code: ${NIBSS_SOURCE_INSTITUTION_CODE:000017}
+    originator-account-name: ${NIBSS_ORIGINATOR_ACCOUNT_NAME:Mellon Nigeria Limited}
+    originator-bank-verification-number: ${NIBSS_ORIGINATOR_BVN:22222222226}
+    originator-kyc-level: ${NIBSS_ORIGINATOR_KYC:1}
+    beneficiary-kyc-level: ${NIBSS_BENEFICIARY_KYC:1}
+    transaction-location: ${NIBSS_TRANSACTION_LOCATION:1.38716,3.05117}
+    biller-id: ${NIBSS_BILLER_ID:362}
+    mandate-reference-number: ${NIBSS_MANDATE_REFERENCE:}
 
   ledger:
     base-url: ${LEDGER_BASE_URL:http://localhost:8083}

@@ -8,6 +8,8 @@ import java.math.BigDecimal;
 @Value
 @Builder
 public class TransferRequest {
+    /** Payout transaction id (sent to NIBSS as {@code transactionId}). */
+    String transactionId;
     String paymentReference;
     String nameEnquiryRef;
     String accountNumber;

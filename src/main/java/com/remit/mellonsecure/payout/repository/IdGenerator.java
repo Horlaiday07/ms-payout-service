@@ -9,5 +9,10 @@ public interface IdGenerator {
 
     String generateBatchReference();
 
+    /**
+     * NIBSS-style numeric id for name enquiry / NIP (e.g. 100005…30 digits).
+     */
+    String generateNipTransactionId();
+
     long nextId();
 }

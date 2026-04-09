@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.remit.mellonsecure.payout.entity.TransactionStatus;
 import com.remit.mellonsecure.payout.entity.*;
+import com.remit.mellonsecure.payout.repository.IdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +17,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @Component
 @RequiredArgsConstructor
@@ -24,6 +26,7 @@ public class NibssAdapter implements ProcessorAdapter {
 
     private final WebClient.Builder webClientBuilder;
     private final ObjectMapper objectMapper;
+    private final IdGenerator idGenerator;
 
     @Value("${payout.nibss.base-url}")
     private String baseUrl;
@@ -40,14 +43,42 @@ public class NibssAdapter implements ProcessorAdapter {
     @Value("${payout.nibss.query-path:/api/nip/transaction/query}")
     private String queryPath;
 
+    @Value("${payout.nibss.channel-code:1}")
+    private int channelCode;
+
+    @Value("${payout.nibss.source-institution-code:000017}")
+    private String sourceInstitutionCode;
+
+    @Value("${payout.nibss.originator-account-name:Mellon Nigeria Limited}")
+    private String originatorAccountName;
+
+    @Value("${payout.nibss.originator-bank-verification-number:}")
+    private String originatorBankVerificationNumber;
+
+    @Value("${payout.nibss.originator-kyc-level:1}")
+    private int originatorKycLevel;
+
+    @Value("${payout.nibss.beneficiary-kyc-level:1}")
+    private int beneficiaryKycLevel;
+
+    @Value("${payout.nibss.transaction-location:}")
+    private String transactionLocation;
+
+    @Value("${payout.nibss.biller-id:}")
+    private String billerId;
+
+    @Value("${payout.nibss.mandate-reference-number:}")
+    private String mandateReferenceNumber;
+
     @Override
     public NameEnquiryResult performNameEnquiry(String accountNumber, String bankCode) {
         String endpoint = baseUrl + nameEnquiryPath;
         try {
-            Map<String, Object> request = Map.of(
-                    "accountNumber", accountNumber,
-                    "bankCode", bankCode
-            );
+            Map<String, Object> request = new LinkedHashMap<>();
+            request.put("accountNumber", accountNumber);
+            request.put("channelCode", String.valueOf(channelCode));
+            request.put("destinationInstitutionCode", institutionCode(bankCode));
+            request.put("transactionId", idGenerator.generateNipTransactionId());
             log.info("NIBSS POST {} request={}", endpoint, requestBodyForLog(request));
             String response = getWebClient()
                     .post()
@@ -76,16 +107,30 @@ public class NibssAdapter implements ProcessorAdapter {
     public TransferResult performTransfer(TransferRequest request) {
         String endpoint = baseUrl + transferPath;
         try {
-            Map<String, Object> nibssRequest = Map.of(
-                    "paymentReference", request.getPaymentReference(),
-                    "sessionId", request.getNameEnquiryRef(),
-                    "accountNumber", request.getAccountNumber(),
-                    "bankCode", request.getBankCode(),
-                    "accountName", request.getAccountName(),
-                    "amount", request.getAmount().doubleValue(),
-                    "narration", request.getNarration() != null ? request.getNarration() : "",
-                    "sourceAccount", request.getSourceAccount()
-            );
+            String narration = request.getNarration() != null ? request.getNarration() : "";
+            Map<String, Object> nibssRequest = new LinkedHashMap<>();
+            nibssRequest.put("sourceInstitutionCode", sourceInstitutionCode);
+            nibssRequest.put("amount", request.getAmount().doubleValue());
+            nibssRequest.put("beneficiaryAccountName", request.getAccountName());
+            nibssRequest.put("beneficiaryAccountNumber", request.getAccountNumber());
+            nibssRequest.put("beneficiaryBankVerificationNumber", "");
+            nibssRequest.put("beneficiaryKYCLevel", beneficiaryKycLevel);
+            nibssRequest.put("channelCode", channelCode);
+            nibssRequest.put("originatorAccountName", originatorAccountName);
+            nibssRequest.put("originatorAccountNumber", Objects.toString(request.getSourceAccount(), ""));
+            nibssRequest.put("originatorBankVerificationNumber", originatorBankVerificationNumber != null ? originatorBankVerificationNumber : "");
+            nibssRequest.put("originatorKYCLevel", originatorKycLevel);
+            nibssRequest.put("destinationInstitutionCode", institutionCode(request.getBankCode()));
+            nibssRequest.put("mandateReferenceNumber", mandateReferenceNumber != null ? mandateReferenceNumber : "");
+            nibssRequest.put("nameEnquiryRef", request.getNameEnquiryRef());
+            nibssRequest.put("originatorNarration", narration);
+            nibssRequest.put("paymentReference", request.getPaymentReference());
+            nibssRequest.put("transactionId", request.getTransactionId());
+            nibssRequest.put("transactionLocation", transactionLocation != null ? transactionLocation : "");
+            nibssRequest.put("beneficiaryNarration", narration);
+            if (billerId != null && !billerId.isBlank()) {
+                nibssRequest.put("billerId", billerId);
+            }
 
             log.info("NIBSS POST {} request={}", endpoint, requestBodyForLog(nibssRequest));
             String response = getWebClient()
@@ -142,13 +187,36 @@ public class NibssAdapter implements ProcessorAdapter {
                 .build();
     }
 
+    /** NIP-style: 6-digit institution code (e.g. bank code 58 → 000058). */
+    static String institutionCode(String bankCode) {
+        if (bankCode == null || bankCode.isBlank()) {
+            return "";
+        }
+        String digits = bankCode.replaceAll("\\D", "");
+        if (digits.isEmpty()) {
+            return bankCode.trim();
+        }
+        if (digits.length() > 6) {
+            digits = digits.substring(digits.length() - 6);
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 6 - digits.length(); i++) {
+            sb.append('0');
+        }
+        sb.append(digits);
+        return sb.toString();
+    }
+
     private NameEnquiryResult parseNameEnquiryResponse(String response, String accountNumber, String bankCode) {
         try {
             JsonNode node = objectMapper.readTree(response);
-            String accountName = node.path("accountName").asText("");
-            String sessionId = node.path("sessionId").asText("");
-            String code = node.path("responseCode").asText("99");
-            String message = node.path("responseMessage").asText("");
+            String accountName = jsonText(node, "accountName");
+            String sessionId = firstNonEmpty(jsonText(node, "sessionID"), jsonText(node, "sessionId"));
+            String code = jsonText(node, "responseCode");
+            if (code.isEmpty()) {
+                code = "99";
+            }
+            String message = firstNonEmpty(jsonText(node, "responseMessage"), jsonText(node, "responseDescription"));
             boolean success = "00".equals(code);
             return NameEnquiryResult.builder()
                     .accountNumber(accountNumber)
@@ -170,13 +238,33 @@ public class NibssAdapter implements ProcessorAdapter {
         }
     }
 
-    private TransferResult parseTransferResponse(String response, String paymentReference, BigDecimal amount) {
+    private TransferResult parseTransferResponse(String response, String paymentReference, BigDecimal requestAmount) {
         try {
             JsonNode node = objectMapper.readTree(response);
-            String processorRef = node.path("processorReference").asText("");
-            String code = node.path("responseCode").asText("99");
-            String message = node.path("responseMessage").asText("");
-            String remarks = node.path("remarks").asText("completed");
+            String code = jsonText(node, "responseCode");
+            if (code.isEmpty()) {
+                code = "99";
+            }
+            String message = firstNonEmpty(jsonText(node, "responseMessage"), jsonText(node, "responseDescription"));
+            String processorRef = firstNonEmpty(
+                    jsonText(node, "transactionId"),
+                    jsonText(node, "sessionID"),
+                    jsonText(node, "sessionId"),
+                    jsonText(node, "paymentReference"));
+            String remarks = firstNonEmpty(jsonText(node, "narration"), jsonText(node, "remarks"), "completed");
+            BigDecimal amount = requestAmount;
+            if (node.has("amount") && !node.get("amount").isNull()) {
+                JsonNode a = node.get("amount");
+                if (a.isNumber()) {
+                    amount = BigDecimal.valueOf(a.asDouble());
+                } else if (a.isTextual()) {
+                    try {
+                        amount = new BigDecimal(a.asText());
+                    } catch (NumberFormatException ignored) {
+                        // keep requestAmount
+                    }
+                }
+            }
             boolean success = "00".equals(code);
             return TransferResult.builder()
                     .paymentReference(paymentReference)
@@ -193,7 +281,7 @@ public class NibssAdapter implements ProcessorAdapter {
                     .success(false)
                     .responseCode("99")
                     .responseMessage("Parse error: " + e.getMessage())
-                    .amount(amount)
+                    .amount(requestAmount)
                     .build();
         }
     }
@@ -201,18 +289,25 @@ public class NibssAdapter implements ProcessorAdapter {
     private TransactionQueryResult parseQueryResponse(String response, String processorReference) {
         try {
             JsonNode node = objectMapper.readTree(response);
-            String statusStr = node.path("status").asText("PENDING");
-            String code = node.path("responseCode").asText("99");
-            String message = node.path("responseMessage").asText("");
-            BigDecimal amount = node.has("amount")
-                    ? BigDecimal.valueOf(node.path("amount").asDouble())
-                    : BigDecimal.ZERO;
-            String remarks = node.path("remarks").asText("completed");
+            String statusStr = jsonText(node, "status");
+            if (statusStr.isEmpty()) {
+                statusStr = "PENDING";
+            }
+            String code = jsonText(node, "responseCode");
+            if (code.isEmpty()) {
+                code = "99";
+            }
+            String message = firstNonEmpty(jsonText(node, "responseMessage"), jsonText(node, "responseDescription"));
+            BigDecimal amount = BigDecimal.ZERO;
+            if (node.has("amount") && !node.get("amount").isNull()) {
+                amount = BigDecimal.valueOf(node.path("amount").asDouble());
+            }
+            String remarks = firstNonEmpty(jsonText(node, "remarks"), jsonText(node, "narration"), "completed");
             boolean success = "00".equals(code);
             TransactionStatus status = parseStatus(statusStr);
             return TransactionQueryResult.builder()
                     .processorReference(processorReference)
-                    .paymentReference(node.path("paymentReference").asText(""))
+                    .paymentReference(jsonText(node, "paymentReference"))
                     .status(status)
                     .responseCode(code)
                     .responseMessage(message)
@@ -239,20 +334,41 @@ public class NibssAdapter implements ProcessorAdapter {
         }
     }
 
+    private static String jsonText(JsonNode node, String field) {
+        JsonNode n = node.get(field);
+        if (n == null || n.isNull() || n.isMissingNode()) {
+            return "";
+        }
+        return n.asText("");
+    }
+
+    private static String firstNonEmpty(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) {
+                return v;
+            }
+        }
+        return "";
+    }
+
     private String mask(String value) {
-        if (value == null || value.length() < 4) return "****";
+        if (value == null || value.length() < 4) {
+            return "****";
+        }
         return value.substring(0, 2) + "***" + value.substring(value.length() - 2);
     }
 
-    /** JSON for logs; masks accountNumber, sessionId, paymentReference, accountName, sourceAccount. */
     private String requestBodyForLog(Map<String, Object> body) {
         try {
             Map<String, Object> copy = new LinkedHashMap<>(body);
-            // copy.computeIfPresent("accountNumber", (k, v) -> mask(String.valueOf(v)));
-            // copy.computeIfPresent("sessionId", (k, v) -> mask(String.valueOf(v)));
-            // copy.computeIfPresent("paymentReference", (k, v) -> mask(String.valueOf(v)));
-            // copy.computeIfPresent("accountName", (k, v) -> mask(String.valueOf(v)));
-            copy.computeIfPresent("sourceAccount", (k, v) -> mask(String.valueOf(v)));
+            copy.computeIfPresent("accountNumber", (k, v) -> mask(String.valueOf(v)));
+            copy.computeIfPresent("beneficiaryAccountNumber", (k, v) -> mask(String.valueOf(v)));
+            copy.computeIfPresent("originatorAccountNumber", (k, v) -> mask(String.valueOf(v)));
+            copy.computeIfPresent("nameEnquiryRef", (k, v) -> mask(String.valueOf(v)));
+            copy.computeIfPresent("paymentReference", (k, v) -> mask(String.valueOf(v)));
+            copy.computeIfPresent("transactionId", (k, v) -> mask(String.valueOf(v)));
+            copy.computeIfPresent("beneficiaryAccountName", (k, v) -> mask(String.valueOf(v)));
+            copy.computeIfPresent("originatorBankVerificationNumber", (k, v) -> mask(String.valueOf(v)));
             return objectMapper.writeValueAsString(copy);
         } catch (Exception e) {
             return String.valueOf(body);
