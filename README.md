@@ -70,7 +70,7 @@ See `application.yml` for:
 - Redis (idempotency, ID generation)
 - RabbitMQ (queues: transfer, response, query, webhook, DLQ)
 - NIBSS processor URLs
-- Ledger service URL
+- **ms-ledger-service** — `payout.ledger.base-url` / `LEDGER_BASE_URL` (default `http://localhost:8083`); see [../ms-ledger-service/README.md](../ms-ledger-service/README.md)
 
 ## Swagger
 
