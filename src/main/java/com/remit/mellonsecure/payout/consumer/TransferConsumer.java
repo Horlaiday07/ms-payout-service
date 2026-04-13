@@ -51,7 +51,8 @@ public class TransferConsumer {
                     result.getResponseCode(),
                     result.getResponseMessage(),
                     result.getRemarks(),
-                    result.getAmount()
+                    result.getAmount(),
+                    result.getRawProcessorResponse()
             );
             rabbitTemplate.convertAndSend(
                     RabbitMQConfig.PAYOUT_EXCHANGE,
@@ -75,7 +76,8 @@ public class TransferConsumer {
                     "99",
                     e.getMessage(),
                     "failed",
-                    message.getAmount()
+                    message.getAmount(),
+                    null
             );
             rabbitTemplate.convertAndSend(
                     RabbitMQConfig.PAYOUT_EXCHANGE,
@@ -96,6 +98,8 @@ public class TransferConsumer {
             String responseCode,
             String responseMessage,
             String remarks,
-            BigDecimal amount
+            BigDecimal amount,
+            /** Full processor HTTP body; persisted to {@code payout_transactions.processor_response}. */
+            String rawProcessorResponse
     ) {}
 }

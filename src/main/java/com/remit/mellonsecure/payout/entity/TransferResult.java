@@ -15,4 +15,6 @@ public class TransferResult {
     String responseMessage;
     BigDecimal amount;
     String remarks;
+    /** Full HTTP response body from the processor (e.g. NIBSS JSON), for persistence as {@code processor_response}. */
+    String rawProcessorResponse;
 }

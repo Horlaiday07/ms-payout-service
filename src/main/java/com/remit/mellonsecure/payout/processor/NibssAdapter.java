@@ -274,6 +274,7 @@ public class NibssAdapter implements ProcessorAdapter {
                     .responseMessage(message)
                     .amount(amount)
                     .remarks(remarks)
+                    .rawProcessorResponse(response)
                     .build();
         } catch (Exception e) {
             return TransferResult.builder()
@@ -282,6 +283,7 @@ public class NibssAdapter implements ProcessorAdapter {
                     .responseCode("99")
                     .responseMessage("Parse error: " + e.getMessage())
                     .amount(requestAmount)
+                    .rawProcessorResponse(response)
                     .build();
         }
     }

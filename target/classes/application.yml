@@ -113,6 +113,9 @@ payout:
     reader-enabled: ${PAYOUT_MERCHANT_CACHE_READER_ENABLED:true}
     key-prefix: ${PAYOUT_MERCHANT_CACHE_KEY_PREFIX:payout:merchant:}
 
+  # Shared secret for payment dashboard → payout internal APIs (e.g. transaction list)
+  internal-api-key: ${PAYOUT_INTERNAL_API_KEY:dev-payout-merchant-sync-change-in-prod}
+
   security:
     # Base64-encoded 32-byte AES key, or any string (SHA-256 used as key material)
     secret-encryption-key: ${PAYOUT_SECRET_ENCRYPTION_KEY:}

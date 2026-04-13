@@ -31,10 +31,14 @@ public class ResponseHandler {
         String status = response.success() ? "SUCCESS" : "FAILED";
         String remarks = response.remarks() != null ? response.remarks() : "completed";
 
+        String processorResponse = response.rawProcessorResponse() != null && !response.rawProcessorResponse().isBlank()
+                ? response.rawProcessorResponse()
+                : response.responseMessage();
+
         transactionRepository.updateStatus(
                 response.transactionId(),
                 status,
-                response.responseMessage(),
+                processorResponse,
                 response.processorReference()
         );
 
