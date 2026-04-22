@@ -65,6 +65,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                 .status(domain.getStatus().name())
                 .merchantPayload(domain.getMerchantPayload())
                 .processorResponse(domain.getProcessorResponse())
+                .ledgerJournalId(domain.getLedgerJournalId())
                 .createdAt(domain.getCreatedAt())
                 .updatedAt(domain.getUpdatedAt())
                 .build();
@@ -84,6 +85,7 @@ public class TransactionRepositoryAdapter implements TransactionRepository {
                 .status(TransactionStatus.valueOf(entity.getStatus()))
                 .merchantPayload(entity.getMerchantPayload())
                 .processorResponse(entity.getProcessorResponse())
+                .ledgerJournalId(entity.getLedgerJournalId())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

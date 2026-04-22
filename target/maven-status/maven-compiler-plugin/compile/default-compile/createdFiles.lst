@@ -24,6 +24,7 @@ com/remit/mellonsecure/payout/service/WebhookDeliveryService.class
 com/remit/mellonsecure/payout/repository/MerchantJpaRepository.class
 com/remit/mellonsecure/payout/service/TransferService$StandardResponse.class
 com/remit/mellonsecure/payout/dto/PayoutTransactionPageDto.class
+com/remit/mellonsecure/payout/service/PayoutLedgerJournalService.class
 com/remit/mellonsecure/payout/repository/PayoutTransactionJpaRepository.class
 com/remit/mellonsecure/payout/cache/PayoutMerchantCacheReader.class
 com/remit/mellonsecure/payout/dto/BatchTransferRequestDto.class

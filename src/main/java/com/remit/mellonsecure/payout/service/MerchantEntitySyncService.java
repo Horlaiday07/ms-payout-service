@@ -49,6 +49,9 @@ public class MerchantEntitySyncService {
         entity.setWebhookUrl(m.getWebhookUrl());
         entity.setProcessorId(m.getProcessorId());
         entity.setSourceAccountNumber(m.getSourceAccountNumber());
+        entity.setLedgerMerchantAccountId(m.getLedgerMerchantAccountId());
+        entity.setLedgerInternalAccountId(m.getLedgerInternalAccountId());
+        entity.setLedgerSettlementAccountId(m.getLedgerSettlementAccountId());
         entity.setSourceBankCode(m.getSourceBankCode());
         entity.setStatus(m.getStatus() != null ? m.getStatus().name() : "ACTIVE");
         if (m.getWhitelistedIps() != null && !m.getWhitelistedIps().isEmpty()) {

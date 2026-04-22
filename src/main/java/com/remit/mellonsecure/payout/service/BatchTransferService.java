@@ -6,7 +6,6 @@ import com.remit.mellonsecure.payout.entity.TransactionStatus;
 import com.remit.mellonsecure.payout.exception.MerchantInactiveException;
 import com.remit.mellonsecure.payout.exception.MerchantNotFoundException;
 import com.remit.mellonsecure.payout.entity.*;
-import com.remit.mellonsecure.payout.client.LedgerClient;
 import com.remit.mellonsecure.payout.processor.ProcessorAdapter;
 import com.remit.mellonsecure.payout.publisher.TransferPublisher;
 import com.remit.mellonsecure.payout.repository.*;
@@ -17,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +27,7 @@ public class BatchTransferService {
     private final PayoutTransactionJpaRepository payoutTransactionJpaRepository;
     private final TransactionRepository transactionRepository;
     private final BatchRepository batchRepository;
-    private final LedgerClient ledgerClient;
+    private final PayoutLedgerJournalService payoutLedgerJournalService;
     private final ProcessorAdapter processorAdapter;
     private final TransferPublisher transferPublisher;
     private final IdGenerator idGenerator;
@@ -61,14 +61,20 @@ public class BatchTransferService {
                 if (payoutTransactionJpaRepository.existsByMerchantIdAndMerchantReference(merchantId, cmd.merchantReference())) {
                     continue;
                 }
-                if (!ledgerClient.hasSufficientBalance(merchant.getSourceAccountNumber(), cmd.amount())) {
-                    continue;
-                }
                 var nameEnquiry = processorAdapter.performNameEnquiry(cmd.accountNumber(), cmd.bankCode());
                 if (!nameEnquiry.isSuccess()) continue;
 
                 String transactionId = java.util.UUID.randomUUID().toString();
                 String paymentReference = idGenerator.generatePaymentReference();
+
+                UUID ledgerJournalUuid;
+                try {
+                    ledgerJournalUuid = payoutLedgerJournalService.createPendingJournal(
+                            merchant, paymentReference, cmd.amount(), "NGN");
+                } catch (Exception e) {
+                    log.warn("Batch ledger skip: merchantRef={} {}", cmd.merchantReference(), e.getMessage());
+                    continue;
+                }
 
                 PayoutTransaction tx = PayoutTransaction.builder()
                         .id(transactionId)
@@ -83,6 +89,7 @@ public class BatchTransferService {
                         .status(TransactionStatus.PENDING)
                         .merchantPayload(null)
                         .processorResponse(null)
+                        .ledgerJournalId(ledgerJournalUuid != null ? ledgerJournalUuid.toString() : null)
                         .createdAt(Instant.now())
                         .updatedAt(Instant.now())
                         .build();

@@ -86,10 +86,10 @@ payout:
     mandate-reference-number: ${NIBSS_MANDATE_REFERENCE:}
 
   ledger:
+    enabled: ${PAYOUT_LEDGER_ENABLED:true}
     base-url: ${LEDGER_BASE_URL:http://localhost:8083}
-    timeout: 10000
-    balance-path: /api/v1/accounts/{accountId}/balance
-    debit-path: /api/v1/ledger/debit
+    public-api-key: ${LEDGER_PUBLIC_API_KEY:}
+    timeout-ms: ${LEDGER_TIMEOUT_MS:15000}
 
   idempotency:
     ttl-hours: 24

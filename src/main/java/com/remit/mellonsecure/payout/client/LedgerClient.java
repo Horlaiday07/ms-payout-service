@@ -1,15 +1,32 @@
 package com.remit.mellonsecure.payout.client;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 /**
- * Port for ledger/balance service.
+ * ms-ledger-service public API ({@code /api/public/ledger/**}) — float reserve, journals, balances.
  */
 public interface LedgerClient {
 
-    BigDecimal getBalance(String accountId);
+    boolean isEnabled();
 
-    boolean hasSufficientBalance(String accountId, BigDecimal amount);
+    BigDecimal getBalance(UUID ledgerAccountId);
 
-    void reserveFunds(String accountId, String paymentReference, BigDecimal amount);
+    boolean hasSufficientBalance(UUID ledgerAccountId, BigDecimal amount);
+
+    void reserveFunds(UUID merchantLedgerAccountId, String paymentReference, BigDecimal amount);
+
+    /**
+     * PAYOUT journal: DEBIT merchant, CREDIT settlement; links to reserve.
+     */
+    UUID createPayoutJournal(
+            String paymentReference,
+            UUID merchantLedgerAccountId,
+            UUID settlementLedgerAccountId,
+            BigDecimal amount,
+            String currency);
+
+    void postJournal(UUID journalId);
+
+    void reverseJournal(UUID journalId);
 }

@@ -11,8 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
+import org.springframework.util.StringUtils;
+
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,8 +32,8 @@ public class MerchantDashboardQueryService {
                 .orElseThrow(() -> new MerchantNotFoundException(merchantId));
 
         BigDecimal balance = BigDecimal.ZERO;
-        if (merchant.getSourceAccountNumber() != null && !merchant.getSourceAccountNumber().isBlank()) {
-            balance = ledgerClient.getBalance(merchant.getSourceAccountNumber());
+        if (StringUtils.hasText(merchant.getLedgerMerchantAccountId())) {
+            balance = ledgerClient.getBalance(UUID.fromString(merchant.getLedgerMerchantAccountId().trim()));
         }
 
         var page = transactionJpaRepository.findByMerchantIdOrderByCreatedAtDesc(merchantId, PageRequest.of(0, 10));

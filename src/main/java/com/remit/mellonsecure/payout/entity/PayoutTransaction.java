@@ -22,6 +22,8 @@ public class PayoutTransaction {
     TransactionStatus status;
     String merchantPayload;
     String processorResponse;
+    /** ms-ledger-service journal id (PENDING until ResponseHandler posts). */
+    String ledgerJournalId;
     Instant createdAt;
     Instant updatedAt;
 }

@@ -3,6 +3,7 @@ package com.remit.mellonsecure.payout.consumer;
 import com.remit.mellonsecure.payout.config.RabbitMQConfig;
 import com.remit.mellonsecure.payout.entity.WebhookPayload;
 import com.remit.mellonsecure.payout.service.MerchantLookupService;
+import com.remit.mellonsecure.payout.client.LedgerClient;
 import com.remit.mellonsecure.payout.repository.TransactionRepository;
 import com.remit.mellonsecure.payout.publisher.WebhookPublisher;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -19,6 +21,7 @@ import java.math.BigDecimal;
 public class ResponseHandler {
 
     private final TransactionRepository transactionRepository;
+    private final LedgerClient ledgerClient;
     private final MerchantLookupService merchantLookupService;
     private final WebhookPublisher webhookPublisher;
     private final RabbitTemplate rabbitTemplate;
@@ -34,6 +37,23 @@ public class ResponseHandler {
         String processorResponse = response.rawProcessorResponse() != null && !response.rawProcessorResponse().isBlank()
                 ? response.rawProcessorResponse()
                 : response.responseMessage();
+
+        transactionRepository.findByTransactionId(response.transactionId()).ifPresent(tx -> {
+            if (!ledgerClient.isEnabled() || tx.getLedgerJournalId() == null || tx.getLedgerJournalId().isBlank()) {
+                return;
+            }
+            try {
+                UUID jid = UUID.fromString(tx.getLedgerJournalId().trim());
+                if (response.success()) {
+                    ledgerClient.postJournal(jid);
+                } else {
+                    ledgerClient.reverseJournal(jid);
+                }
+            } catch (Exception e) {
+                log.error("Ledger post/reverse failed for transactionId={} journalId={}",
+                        response.transactionId(), tx.getLedgerJournalId(), e);
+            }
+        });
 
         transactionRepository.updateStatus(
                 response.transactionId(),

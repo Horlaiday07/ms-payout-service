@@ -26,6 +26,9 @@ public class PayoutMerchantCachePayload {
     private String webhookUrl;
     private String processorId;
     private String sourceAccountNumber;
+    private String ledgerMerchantAccountId;
+    private String ledgerInternalAccountId;
+    private String ledgerSettlementAccountId;
     private String sourceBankCode;
     private String whitelistedIps;
 }

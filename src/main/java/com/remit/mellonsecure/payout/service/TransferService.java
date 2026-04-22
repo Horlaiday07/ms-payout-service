@@ -6,7 +6,6 @@ import com.remit.mellonsecure.payout.entity.MerchantStatus;
 import com.remit.mellonsecure.payout.entity.TransactionStatus;
 import com.remit.mellonsecure.payout.entity.*;
 import com.remit.mellonsecure.payout.exception.*;
-import com.remit.mellonsecure.payout.client.LedgerClient;
 import com.remit.mellonsecure.payout.processor.ProcessorAdapter;
 import com.remit.mellonsecure.payout.publisher.TransferPublisher;
 import com.remit.mellonsecure.payout.repository.*;
@@ -16,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +25,7 @@ public class TransferService {
     private final MerchantLookupService merchantLookupService;
     private final PayoutTransactionJpaRepository payoutTransactionJpaRepository;
     private final TransactionRepository transactionRepository;
-    private final LedgerClient ledgerClient;
+    private final PayoutLedgerJournalService payoutLedgerJournalService;
     private final ProcessorAdapter processorAdapter;
     private final TransferPublisher transferPublisher;
     private final IdGenerator idGenerator;
@@ -56,14 +56,13 @@ public class TransferService {
 
         String paymentReference = idGenerator.generatePaymentReference();
 
-        // if (!ledgerClient.hasSufficientBalance(merchant.getSourceAccountNumber(), command.amount())) {
-        //     throw new InsufficientBalanceException(command.merchantId(), command.amount());
-        // }
-
         NameEnquiryResult nameEnquiry = resolveNameEnquiry(command);
         if (!nameEnquiry.isSuccess()) {
             throw new PayoutDomainException("NAME_ENQUIRY_FAILED", nameEnquiry.getResponseMessage());
         }
+
+        UUID ledgerJournalUuid = payoutLedgerJournalService.createPendingJournal(
+                merchant, paymentReference, command.amount(), "NGN");
 
         String transactionId = java.util.UUID.randomUUID().toString();
         String payloadJson = serializePayload(command);
@@ -81,6 +80,7 @@ public class TransferService {
                 .status(TransactionStatus.PENDING)
                 .merchantPayload(payloadJson)
                 .processorResponse(null)
+                .ledgerJournalId(ledgerJournalUuid != null ? ledgerJournalUuid.toString() : null)
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .build();

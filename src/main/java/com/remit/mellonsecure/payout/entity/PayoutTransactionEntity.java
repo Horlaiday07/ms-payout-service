@@ -55,6 +55,9 @@ public class PayoutTransactionEntity {
     @Column(name = "processor_response", columnDefinition = "TEXT")
     private String processorResponse;
 
+    @Column(name = "ledger_journal_id", length = 36)
+    private String ledgerJournalId;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 

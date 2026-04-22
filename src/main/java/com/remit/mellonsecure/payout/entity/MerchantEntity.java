@@ -41,8 +41,17 @@ public class MerchantEntity {
     @Column(name = "processor_id", length = 64)
     private String processorId;
 
-    @Column(name = "source_account_number", length = 20)
+    @Column(name = "source_account_number", length = 64)
     private String sourceAccountNumber;
+
+    @Column(name = "ledger_merchant_account_id", length = 36)
+    private String ledgerMerchantAccountId;
+
+    @Column(name = "ledger_internal_account_id", length = 36)
+    private String ledgerInternalAccountId;
+
+    @Column(name = "ledger_settlement_account_id", length = 36)
+    private String ledgerSettlementAccountId;
 
     @Column(name = "source_bank_code", length = 10)
     private String sourceBankCode;

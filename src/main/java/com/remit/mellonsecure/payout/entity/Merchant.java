@@ -18,6 +18,9 @@ public class Merchant {
     String webhookUrl;
     String processorId;
     String sourceAccountNumber;
+    String ledgerMerchantAccountId;
+    String ledgerInternalAccountId;
+    String ledgerSettlementAccountId;
     String sourceBankCode;
     MerchantStatus status;
     List<String> whitelistedIps;
